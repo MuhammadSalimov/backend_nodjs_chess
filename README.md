@@ -1,17 +1,15 @@
 .env file
 DATABASE_URL=""
 PORT=
-
 JWT_ACCESS_KEY= 
 JWT_REFRESH_KEY=
-
-# Mail service 
+Mail service 
 SMTP_HOST=
 SMTP_PORT=
 SMTP_USER=
 SMTP_PASSWORD=
 
-#  Localehost
+Localehost
 API_URL = http://localhost:PORT
 
 
