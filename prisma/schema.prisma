@@ -1,0 +1,94 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String   @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  email       String   @unique
+  password    String
+  name        String
+  role        String   @default("user")
+  isActivated Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  players     Player[]
+  token Token []
+  @@id([id])
+  @@map("user")
+}
+
+model Tournament {
+  id          String        @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name        String
+  startDate   DateTime
+  endDate     DateTime
+  players     Player[]
+  matches     Match[]
+  leaderboard Leaderboard[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+  @@id([id])
+  @@map("tournament")
+}
+
+model Player {
+  id           String        @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  name         String
+  age          Int
+  rating       Float
+  country      String
+  userId       String       @db.Uuid
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tournaments  Tournament[]
+  leaderboard  Leaderboard[]
+  matchPlayer1 Match[]       @relation("player1")
+  matchPlayer2 Match[]       @relation("player2")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@id([id])
+  @@map("player")
+}
+
+model Match {
+  id           String     @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  round        Int
+  player1Id    String     @db.Uuid
+  player2Id    String     @db.Uuid
+  player1      Player     @relation("player1", fields: [player1Id], references: [id], onDelete: Cascade)
+  player2      Player     @relation("player2", fields: [player2Id], references: [id], onDelete: Cascade)
+  result       String     @default("0-0")
+  tournamentId String     @db.Uuid
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@id([id])
+  @@map("match")
+}
+
+model Leaderboard {
+  id           String     @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  playerId     String     @db.Uuid
+  tournamentId String     @db.Uuid
+  points       Float
+  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@id([id])
+  @@map("leaderboard")
+  @@unique([playerId, tournamentId])
+}
+
+
+model Token {
+  id     String @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  userId String @db.Uuid
+  refreshToken String @map("refresh_token")
+  user User @relation(fields: [userId] , references: [id] , onDelete: Cascade)
+  @@id([id])
+  @@map("token")
+}
