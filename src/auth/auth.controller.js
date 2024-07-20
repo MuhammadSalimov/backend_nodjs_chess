@@ -1,19 +1,41 @@
 const BaseError = require("../error/base.error");
 const authService = require("../services/auth.service");
 const { validationResult } = require("express-validator");
+const bcrypt = require('bcrypt')
+const prisma = require("../utils/connection");
 
 class AuthController {
-  
+  async addAdmin() {
+    const data = {
+      email: "admin@gmail.com",
+      password: "1Aw@356Dt5",
+      name: "Admin",
+    }; 
+    const hashedPass = await bcrypt.hash(data.password, 10);
+    const checkAdmin = await prisma.user.findUnique({where:{email:data.email}})
+    if(!checkAdmin){
+      await prisma.user.create({
+        data: {
+          email:data.email,
+          password:hashedPass,
+          name:data.name,
+          role: "admin",
+          isActivated: true,
+        },
+      });
+      console.log("admin created");
+    }
+  }
   async register(req, res, next) {
     try {
-      const errors = validationResult(req); 
+      const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return next(
           BaseError.BadRequest("Error with validation", errors.array())
         );
       }
-      const { email, password , name } = req.body;
-      const data = await authService.register(email , password , name);
+      const { email, password, name } = req.body;
+      const data = await authService.register(email, password, name);
 
       res.cookie("refreshToken", data.refreshToken, {
         httpOnly: true,
@@ -38,7 +60,7 @@ class AuthController {
 
   async login(req, res, next) {
     try {
-      const errors = validationResult(req); 
+      const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return next(
           BaseError.BadRequest("Error with validation", errors.array())
@@ -80,7 +102,6 @@ class AuthController {
       next(error);
     }
   }
-
 }
 
 module.exports = new AuthController();

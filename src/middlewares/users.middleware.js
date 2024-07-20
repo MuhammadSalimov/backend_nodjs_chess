@@ -7,9 +7,13 @@ class ControllerMiddlewares{
     next()
   }
   isAdmin (req , __ , next){
-    const {role} = req.userData
+    try {
+      const {role} = req.user
     if(!(role =='admin')) return next(BaseError.BadRequest("" , "role is not admin"))
     next()
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 
